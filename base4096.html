@@ -4,11 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>文件传播助手(base4096)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+    
+    #container {
+      text-align: center;
+    }
+    
+    input[type="file"] {
+      margin: 10px 0;
+    }
+    
+    button {
+      margin: 5px;
+    }
+    
+    p {
+      margin: 5px 0;
+    }
+  </style>
 </head>
 <body>
-  <p><span id="fName"></span><button onclick="dFile()">提取文件</button></p >
-  <input type="file" id="iFile" accept="*">
-  <button onclick="eFile()">转换已选择的文件并保存</button>
+  <div id="container">
+    <p><span id="fName"></span><button onclick="dFile()">提取文件</button></p>
+    <input type="file" id="iFile" accept="*">
+    <button onclick="eFile()">转换已选择的文件并保存</button>
+  </div>
+
   <script>
     let doc = document;
     let dp = doc.getElementById("fName");
