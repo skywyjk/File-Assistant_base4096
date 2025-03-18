@@ -30,13 +30,21 @@
     p {
       margin: 5px 0;
     }
+    
+    #agreement {
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
   <div id="container">
-    <p><span id="fName"></span><button onclick="dFile()">提取文件</button></p>
-    <input type="file" id="iFile" accept="*">
-    <button onclick="eFile()">转换已选择的文件并保存</button>
+    <p><span id="fName"></span><button id="dFileBtn" onclick="dFile()" disabled>提取文件</button></p>
+    <input type="file" id="iFile" accept="*" disabled>
+    <button id="eFileBtn" onclick="eFile()" disabled>转换已选择的文件并保存</button>
+    <div id="agreement">
+      <input type="checkbox" id="agreeCheckbox" onchange="toggleButtons()">
+      <label for="agreeCheckbox">仅限用于技术研究，请勿用于非法用途</label>
+    </div>
   </div>
 
   <script>
@@ -56,6 +64,12 @@
     }
 
     function eFile() {
+      let agreeCheckbox = doc.getElementById("agreeCheckbox");
+      if (!agreeCheckbox.checked) {
+        alert("请先勾选同意声明！");
+        return;
+      }
+
       let iFile = doc.getElementById("iFile");
       if (!iFile.files.length) {
         alert("请选择文件");
@@ -105,6 +119,12 @@
     }
 
     function dFile() {
+      let agreeCheckbox = doc.getElementById("agreeCheckbox");
+      if (!agreeCheckbox.checked) {
+        alert("请先勾选同意声明！");
+        return;
+      }
+
       if (!res) {
         alert("没有可提取的内容！");
         return;
@@ -142,6 +162,17 @@
       } else {
         console.log("用户取消保存文件");
       }
+    }
+
+    function toggleButtons() {
+      let agreeCheckbox = doc.getElementById("agreeCheckbox");
+      let dFileBtn = doc.getElementById("dFileBtn");
+      let eFileBtn = doc.getElementById("eFileBtn");
+      let iFile = doc.getElementById("iFile");
+
+      dFileBtn.disabled = !agreeCheckbox.checked;
+      eFileBtn.disabled = !agreeCheckbox.checked;
+      iFile.disabled = !agreeCheckbox.checked;
     }
   </script>
 </body>
