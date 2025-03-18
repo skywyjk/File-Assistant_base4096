@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件传播助手(base4096)</title>
+</head>
+<body>
+  <p><span id="fName"></span><button onclick="dFile()">提取文件</button></p >
+  <input type="file" id="iFile" accept="*">
+  <button onclick="eFile()">转换已选择的文件并保存</button>
+  <script>
+    let doc = document;
+    let dp = doc.getElementById("fName");
+    let inx = 0x004e00;
+    let m1 = 0x00e0;
+    let m23 = 0x0080;
+    let res = "";
+    let fName = "";
+    dp.textContent = fName;
+
+    function arrDToU(arr, b12, inx) {
+      arr[inx] = m1 | (b12 >> 12);
+      arr[inx + 1] = m23 | ((b12 >> 6) & 0x003f);
+      arr[inx + 2] = m23 | (b12 & 0x003f);
+    }
+
+    function eFile() {
+      let iFile = doc.getElementById("iFile");
+      if (!iFile.files.length) {
+        alert("请选择文件");
+        return;
+      }
+      let file = iFile.files[0];
+      let reader = new FileReader();
+      reader.onload = function (e) {
+        let bLen = e.target.result.byteLength;
+        let endN = (3 - (bLen % 3)) % 3;
+
+        let bArr = new Uint8Array([...new Uint8Array(e.target.result), ...new Uint8Array(endN)]);
+        let arr = new Uint8Array(bArr.length * 2);
+
+        for (let i = 0; i < bArr.length; i += 3) {
+          arrDToU(arr, ((bArr[i] << 4) | (bArr[i + 1] >> 4)) + inx, i / 3 * 6);
+          arrDToU(arr, (((bArr[i + 1] & 0x000f) << 8) | bArr[i + 2]) + inx, i / 3 * 6 + 3);
+        }
+
+        dp.textContent = "";
+        let blob = new Blob(
+          [
+            "<!DOCTYPE html>" +
+            doc.documentElement.outerHTML
+              .replace(
+                /let\s+res\s*=\s*"([^"]*)";/,
+                'let res = "' + new TextDecoder('utf-8').decode(arr) + endN + '";'
+              )
+              .replace(
+                /let\s+fName\s*=\s*"([^"]*)";/,
+                'let fName = "' + iFile.files[0].name + '";'
+              )
+            ,
+          ],
+          { type: "text/html" }
+        );
+        dp.textContent = fName;
+        let lnk = doc.createElement("a");
+        lnk.href = URL.createObjectURL(blob);
+        lnk.download = iFile.files[0].name + ".html";
+        doc.body.appendChild(lnk);
+        lnk.click();
+        doc.body.removeChild(lnk);
+        URL.revokeObjectURL(lnk.href);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function dFile() {
+      if (!res) {
+        alert("没有可提取的内容！");
+        return;
+      }
+
+      let arr = [];
+      let mark = 0x000000ff;
+      for (let i = 0; i < res.length - 1; i += 2) {
+        let b12L = res.charCodeAt(i) - inx;
+        let b12R = res.charCodeAt(i + 1) - inx;
+        arr.push(mark & (b12L >> 4));
+        arr.push(mark & (((b12L & mark) << 4) | (b12R >> 8)));
+        arr.push(mark & (b12R & mark));
+      }
+      let end = res[res.length - 1];
+      if (end == "1") {
+        arr.pop();
+      } else if (end == "2") {
+        arr.pop();
+        arr.pop();
+      }
+
+      let out = new Uint8Array(arr);
+      let blob = new Blob([out], { type: "application/octet-stream" });
+
+      // 弹出确认对话框，让用户选择是否保存文件
+      if (confirm("是否保存解码后的文件？")) {
+        let lnk = doc.createElement("a");
+        lnk.href = URL.createObjectURL(blob);
+        lnk.download = fName || "decoded_file.bin"; // 如果没有文件名，则默认为"decoded_file.bin"
+        doc.body.appendChild(lnk);
+        lnk.click();
+        doc.body.removeChild(lnk);
+        URL.revokeObjectURL(lnk.href);
+      } else {
+        console.log("用户取消保存文件");
+      }
+    }
+  </script>
+</body>
+</html>
